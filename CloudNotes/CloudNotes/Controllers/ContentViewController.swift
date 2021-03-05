@@ -11,7 +11,7 @@ class ContentViewController: UIViewController {
     private let headLinefont = UIFont.boldSystemFont(ofSize: 24)
     private let bodyLinefont = UIFont.systemFont(ofSize: 15)
     private var currentMemo: Memo?
-    var delegate: MemoDelegate?
+    weak var delegate: MemoDelegate?
     
     private var popoverController: UIPopoverPresentationController?
     private var activityViewController: UIActivityViewController?
@@ -86,6 +86,7 @@ class ContentViewController: UIViewController {
         contentView.backgroundColor = .white
         contentView.isScrollEnabled = false
         contentView.isEditable = false
+        //TODO: autocorrectionType과 isUserInteractionEnabled 생각해보기
         contentView.autocorrectionType = .no
         contentView.isUserInteractionEnabled = true
         contentView.dataDetectorTypes = .all
@@ -116,13 +117,14 @@ class ContentViewController: UIViewController {
             delegate?.updateMemo(memo: modifiedContents)
         }
     }
-    
+
+    //FIXME: 호출이 안되는 것 같습니다. 이 부분이 아이폰 공유화면일까요? 확인 부탁드려요!
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        super.viewWillTransition(to: size, with: coordinator)
         guard let activityViewController = self.activityViewController,
               let popoverController = activityViewController.popoverPresentationController else {
             return
         }
-        
         popoverController.sourceView = self.view
         popoverController.sourceRect = CGRect(x: size.width*0.5, y: size.height*0.5, width: 0, height: 0)
         popoverController.permittedArrowDirections = []
@@ -204,8 +206,7 @@ extension ContentViewController {
             }
         }
     }
-    
-    
+
     private func modifyContents() -> Memo?  {
         let startIndex: String.Index = contentView.text.startIndex
         guard let endIndex: String.Index = contentView.text.firstIndex(of: Character(String.EscapeSequence.newLine)) else { return Memo() }
@@ -222,6 +223,7 @@ extension ContentViewController {
         return currentMemo
     }
 }
+
 extension ContentViewController: UITextViewDelegate {
     func textViewDidChange(_ textView: UITextView) {
         updateTextViewSize()

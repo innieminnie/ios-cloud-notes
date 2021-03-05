@@ -6,7 +6,7 @@
 
 import UIKit
 
-protocol MemoDelegate {
+protocol MemoDelegate: AnyObject {
     func updateMemo(memo: Memo)
     func deleteMemo(memo: Memo)
 }
