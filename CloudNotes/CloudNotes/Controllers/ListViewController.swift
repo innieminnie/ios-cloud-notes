@@ -82,8 +82,8 @@ extension ListViewController {
     private func fetchMemo() {
         do {
             memoList = try context.fetch(Memo.fetchRequest())
-            DispatchQueue.main.async {
-                self.tableView.reloadData()
+            DispatchQueue.main.async { [weak self] in
+                self?.tableView.reloadData()
             }
         } catch(let error) {
             #if DEBUG
@@ -135,25 +135,25 @@ extension ListViewController {
     }
     
     private func showContentViewController(indexPath: IndexPath?) {
-        let contentVC = ContentViewController()
+        let contentViewController = ContentViewController()
         if indexPath != nil {
-            contentVC.didTapMemoItem(with: memoList[indexPath!.row])
+            contentViewController.didTapMemoItem(with: memoList[indexPath!.row])
         } else {
             guard let recentlyCreatedMemo = memoList.last else { return }
-            contentVC.didTapMemoItem(with: recentlyCreatedMemo)
+            contentViewController.didTapMemoItem(with: recentlyCreatedMemo)
         }
 
         (splitViewController?.viewControllers.last as? UINavigationController)?.popToRootViewController(animated: false)
-        (splitViewController?.viewControllers.last as? UINavigationController)?.pushViewController(contentVC, animated: true)
+        (splitViewController?.viewControllers.last as? UINavigationController)?.pushViewController(contentViewController, animated: true)
     }
 }
 extension ListViewController: MemoDelegate {
     func updateMemo(memo: Memo) {
-        guard memo.title != String(), memo.body != String() else {
+        guard let title = memo.title, let body = memo.body else { return }
+
+        if !title.isEmpty, !body.isEmpty {
             self.deleteItem(memo: memo)
-            return
         }
-        
         self.updateItem(memo: memo)
     }
 

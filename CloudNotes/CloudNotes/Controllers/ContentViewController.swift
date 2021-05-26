@@ -55,10 +55,10 @@ class ContentViewController: UIViewController {
             
             let deleteCancelAction = UIAlertAction(title: AlertController.MemoDeleteAlert.cancelAction, style: .cancel, handler: nil)
             let deleteCompleteAction = UIAlertAction(title: AlertController.MemoDeleteAlert.deleteAction, style: .destructive, handler: { _  in
-                if let mainVC = self.splitViewController as? MainViewController,
+                if let mainViewController = self.splitViewController as? MainViewController,
                    let currentMemo = self.currentMemo {
-                    let masterVC = mainVC.masterViewController
-                    self.delegate = masterVC
+                    let masterViewController = mainViewController.masterViewController
+                    self.delegate = masterViewController
                     
                     self.delegate?.deleteMemo(memo: currentMemo)
                     self.navigationController?.popToRootViewController(animated: false)
@@ -86,9 +86,7 @@ class ContentViewController: UIViewController {
         contentView.backgroundColor = .white
         contentView.isScrollEnabled = false
         contentView.isEditable = false
-        //TODO: autocorrectionType과 isUserInteractionEnabled 생각해보기
         contentView.autocorrectionType = .no
-        contentView.isUserInteractionEnabled = true
         contentView.dataDetectorTypes = .all
         return contentView
     }()
@@ -110,15 +108,14 @@ class ContentViewController: UIViewController {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         
-        if let mainVC = self.splitViewController as? MainViewController,
+        if let mainViewController = self.splitViewController as? MainViewController,
            let modifiedContents = modifyContents() {
-            let masterVC = mainVC.masterViewController
-            self.delegate = masterVC
+            let masterViewController = mainViewController.masterViewController
+            self.delegate = masterViewController
             delegate?.updateMemo(memo: modifiedContents)
         }
     }
 
-    //FIXME: 호출이 안되는 것 같습니다. 이 부분이 아이폰 공유화면일까요? 확인 부탁드려요!
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
         super.viewWillTransition(to: size, with: coordinator)
         guard let activityViewController = self.activityViewController,
@@ -187,10 +184,11 @@ extension ContentViewController {
     }
     
     private func updateUI(with memo: Memo) {
-        let memoAttributedString = NSMutableAttributedString(string: memo.title ?? .empty)
-        let bodyAttributedString = NSMutableAttributedString(string: "\(String.EscapeSequence.newLine)\(memo.body ?? .empty)")
-        memoAttributedString.addAttribute(.font, value: headLinefont, range: NSRange(location: 0, length: memo.title?.count ?? .zero))
-        bodyAttributedString.addAttribute(.font, value: bodyLinefont, range: NSRange(location: 0, length: memo.body?.count ?? .zero))
+        guard let title = memo.title, let body = memo.body else { return }
+        let memoAttributedString = NSMutableAttributedString(string: title)
+        let bodyAttributedString = NSMutableAttributedString(string: "\(String.EscapeSequence.newLine)\(body)")
+        memoAttributedString.addAttribute(.font, value: headLinefont, range: NSRange(location: 0, length: title.count))
+        bodyAttributedString.addAttribute(.font, value: bodyLinefont, range: NSRange(location: 0, length: body.count))
         memoAttributedString.append(bodyAttributedString)
         contentView.attributedText = memoAttributedString
         updateTextViewSize()
@@ -209,7 +207,7 @@ extension ContentViewController {
 
     private func modifyContents() -> Memo?  {
         let startIndex: String.Index = contentView.text.startIndex
-        guard let endIndex: String.Index = contentView.text.firstIndex(of: Character(String.EscapeSequence.newLine)) else { return Memo() }
+        guard let endIndex: String.Index = contentView.text.firstIndex(of: Character(String.EscapeSequence.newLine)) else { return nil }
         let afterEndIndex: String.Index = contentView.text.index(after: endIndex)
         
         
